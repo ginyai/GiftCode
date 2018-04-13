@@ -23,10 +23,10 @@ public class CommandUse implements ICommand {
     @Override
     public CommandElement getArgument() {
         return GenericArguments.seq(
-                GenericArguments.requiringPermission(
+                GenericArguments.optional(GenericArguments.requiringPermission(
                         GenericArguments.onlyOne(GenericArguments.player(Text.of("player"))),
                         GiftCodePlugin.PLUGIN_ID+".command.use.other"
-                ),
+                )),
                 GenericArguments.string(Text.of("code"))
         );
     }

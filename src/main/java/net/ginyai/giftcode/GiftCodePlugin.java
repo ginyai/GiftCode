@@ -1,6 +1,8 @@
 package net.ginyai.giftcode;
 
 import com.google.inject.Inject;
+import net.ginyai.giftcode.command.CommandMain;
+import net.ginyai.giftcode.command.CommandUse;
 import net.ginyai.giftcode.storage.ICodeStorage;
 import net.ginyai.giftcode.storage.ILogStorage;
 import net.ginyai.giftcode.storage.SqlStorage;
@@ -92,7 +94,8 @@ public class GiftCodePlugin {
 
     @Listener
     public void onServerStart(GameStartingServerEvent event) {
-        //todo: 注册命令
+        Sponge.getCommandManager().register(this,new CommandMain().getCommandSpec(),GiftCodePlugin.PLUGIN_ID);
+        Sponge.getCommandManager().register(this,new CommandUse().getCommandSpec(),config.getUseCommandAlias());
     }
 
 

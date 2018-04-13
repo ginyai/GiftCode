@@ -15,6 +15,7 @@ import org.spongepowered.api.Sponge;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +35,7 @@ public class Config {
 
     private String databasePrefix;
     private String jdbcUrl;
+    private List<String> useCommandAlias;
 
     private Map<String,String> charSets;
     private Map<String,CodeFormat> codeFormatMap;
@@ -62,22 +64,27 @@ public class Config {
         charSets = new HashMap<>();
         databasePrefix = mainConfigRootNode.getNode("database","prefix").getString("");
         jdbcUrl =  mainConfigRootNode.getNode("database","jdbc_url").getString();
-        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:commandGroupRootNode.getNode("random_char_set").getChildrenMap().entrySet()){
+        useCommandAlias = mainConfigRootNode.getNode("use_command_alias").getList(TypeToken.of(String.class));
+        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:mainConfigRootNode.getNode("random_char_set").getChildrenMap().entrySet()){
             charSets.put(node.getKey().toString(),node.getValue().getString());
         }
         codeFormatMap = new HashMap<>();
-        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:commandGroupRootNode.getNode("code_formats").getChildrenMap().entrySet()){
+        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:mainConfigRootNode.getNode("code_formats").getChildrenMap().entrySet()){
             codeFormatMap.put(node.getKey().toString(),new CodeFormat(node.getValue().getString()));
         }
 
         if(!commandGroupPath.toFile().exists()){
-            Sponge.getAssetManager().getAsset(plugin,"example_command_group.conf").get().copyToFile(commandGroupPath);
+            Sponge.getAssetManager().getAsset(plugin,"example_command_groups.conf").get().copyToFile(commandGroupPath);
         }
         commandGroupRootNode = commandGroupLoader.load(commandGroupOptions);
         commandGroupMap = new HashMap<>();
         for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:commandGroupRootNode.getNode("command_groups").getChildrenMap().entrySet()){
             commandGroupMap.put(node.getKey().toString(),node.getValue().getValue(TypeToken.of(CommandGroup.class)));
         }
+    }
+
+    public List<String> getUseCommandAlias() {
+        return useCommandAlias;
     }
 
     public String getCharSet(String name){

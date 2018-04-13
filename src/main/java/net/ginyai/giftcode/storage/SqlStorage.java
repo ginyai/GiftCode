@@ -89,6 +89,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         int count = 0;
         boolean failed;
         do {
+            count++;
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_CODE)){
                 statement.setString(1,code);
                 ResultSet resultSet = statement.executeQuery();
@@ -108,6 +109,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         int count = 0;
         boolean failed;
         do {
+            count++;
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_CODE)){
                 statement.setString(1,code);
                 ResultSet resultSet = statement.executeQuery();
@@ -127,11 +129,13 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         if(group == null){
             return Optional.empty();
         }
-
+        count = 0;
         do {
+            count++;
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(DELETE_CODE)){
                 statement.setString(1,code);
-                failed = !statement.execute();
+                statement.execute();
+                failed = false;
             }catch (SQLException e) {
                 plugin.getLogger().error("Filed to lookup code.Try "+ count+" times.",e);
                 failed = true;
@@ -150,6 +154,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         int count = 0;
         boolean failed;
         do {
+            count++;
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_CODE)){
                 statement.setString(1,code);
                 ResultSet resultSet = statement.executeQuery();
@@ -165,18 +170,20 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         }
         count = 0;
         do {
+            count++;
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(INSERT_CODE)){
                 statement.setString(1,code);
                 statement.setString(2,group.getName());
                 //todo:
                 statement.setString(3,null);
-                failed = statement.execute();
+                statement.execute();
+                failed = false;
             }catch (SQLException e) {
                 plugin.getLogger().error("Filed to add code.Try "+ count+" times.",e);
                 failed = true;
             }
         }while (failed && count<retry);
-        return failed;
+        return !failed;
     }
 
     @Override
@@ -196,11 +203,13 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         int count = 0;
         boolean failed;
         do {
+            count++;
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(INSERT_LOG)){
                 statement.setString(1,player.getUniqueId().toString());
                 statement.setString(2,code);
                 statement.setString(3,group.getName());
-                failed = statement.execute();
+                statement.execute();
+                failed = false;
             }catch (SQLException e) {
                 plugin.getLogger().error("Filed to log code use.Try "+ count+" times.",e);
                 failed = true;
