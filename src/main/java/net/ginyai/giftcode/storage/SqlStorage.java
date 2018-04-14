@@ -10,14 +10,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class SqlStorage implements ICodeStorage,ILogStorage {
 
 
-    private String GET_CODE = "SELECT * FROM %s WHERE CODE=?";
-    private String GET_COMMAND = "SELECT * FROM %s WHERE COMMAND=?";
+    private String GET_BY_CODE = "SELECT * FROM %s WHERE CODE=?";
+    private String GET_BY_COMMAND = "SELECT * FROM %s WHERE COMMAND=?";
     private String INSERT_CODE = "INSERT INTO %s (CODE,COMMAND,CONTEXT) VALUES(?,?,?)";
     private String DELETE_CODE = "DELETE FROM %s WHERE CODE=?";
     private String CREATE_CODE_TABLE = "CREATE TABLE IF NOT EXISTS %s (CODE VARCHAR(255) NOT NULL,COMMAND VARCHAR(255) NOT NULL,CONTEXT VARCHAR(255),PRIMARY KEY(CODE))";
@@ -42,8 +41,8 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         this.sqlService = Sponge.getServiceManager().provide(SqlService.class).get();
 
         CREATE_CODE_TABLE = String.format(CREATE_CODE_TABLE,codeTableName);
-        GET_CODE = String.format(GET_CODE,codeTableName);
-        GET_COMMAND = String.format(GET_COMMAND,codeTableName);
+        GET_BY_CODE = String.format(GET_BY_CODE,codeTableName);
+        GET_BY_COMMAND = String.format(GET_BY_COMMAND,codeTableName);
         INSERT_CODE = String.format(INSERT_CODE,codeTableName);
         DELETE_CODE = String.format(DELETE_CODE,codeTableName);
 
@@ -90,7 +89,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         boolean failed;
         do {
             count++;
-            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_CODE)){
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_BY_CODE)){
                 statement.setString(1,code);
                 ResultSet resultSet = statement.executeQuery();
                 hasCode = resultSet.next();
@@ -110,7 +109,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         boolean failed;
         do {
             count++;
-            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_CODE)){
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_BY_CODE)){
                 statement.setString(1,code);
                 ResultSet resultSet = statement.executeQuery();
                 if(resultSet.next()){
@@ -155,7 +154,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         boolean failed;
         do {
             count++;
-            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_CODE)){
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_BY_CODE)){
                 statement.setString(1,code);
                 ResultSet resultSet = statement.executeQuery();
                 hasCode = resultSet.next();
@@ -195,6 +194,29 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
             }
         }
         return count;
+    }
+
+    @Override
+    public Collection<String> getCodes(CommandGroup group) {
+        List<String> codes = null;
+        int count = 0;
+        boolean failed;
+        do {
+            count++;
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(GET_BY_COMMAND)){
+                statement.setString(1,group.getName());
+                ResultSet resultSet = statement.executeQuery();
+                codes = new ArrayList<>();
+                while (resultSet.next()){
+                    codes.add(resultSet.getString("CODE"));
+                }
+                failed = false;
+            }catch (SQLException e) {
+                plugin.getLogger().error("Filed to lookup code.Try "+ count+" times.",e);
+                failed = true;
+            }
+        }while (failed && count<retry);
+        return codes;
     }
 
     @Override

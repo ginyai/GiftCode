@@ -28,8 +28,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Plugin(
-        id = "giftcode",
-        name = "GiftCode",
+        id = GiftCodePlugin.PLUGIN_ID,
+        version = GiftCodePlugin.VERSION,
+        name = GiftCodePlugin.PLUGIN_NAME,
         description = "GiftCodePlugin",
         authors = {
                 "GiNYAi"
@@ -38,7 +39,7 @@ import java.nio.file.Path;
 public class GiftCodePlugin {
     public static final String PLUGIN_ID = "giftcode";
     public static final String PLUGIN_NAME = "GiftCode";
-    public static final String VERSION = "0.1.0";
+    public static final String VERSION = "0.2.0";
 
     private static GiftCodePlugin instance;
 
@@ -64,6 +65,10 @@ public class GiftCodePlugin {
 
     public Config getConfig() {
         return config;
+    }
+
+    public Path getConfigDir() {
+        return configDir;
     }
 
     public ICodeStorage getCodeStorage() {

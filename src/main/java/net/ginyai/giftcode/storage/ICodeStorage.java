@@ -2,6 +2,7 @@ package net.ginyai.giftcode.storage;
 
 import net.ginyai.giftcode.object.CommandGroup;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,6 +17,9 @@ public interface ICodeStorage {
      * @return added counts
      */
     int addCode(Map<String,CommandGroup> codes);
+
+    //Set?
+    Collection<String> getCodes(CommandGroup group);
 
     //todo:remove
 }
