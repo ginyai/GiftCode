@@ -24,7 +24,7 @@ public class CommandUse implements ICommand {
     public CommandElement getArgument() {
         return GenericArguments.seq(
                 GenericArguments.optional(GenericArguments.requiringPermission(
-                        GenericArguments.onlyOne(GenericArguments.player(Text.of("player"))),
+                        GenericArguments.onlyOne(GenericArguments.playerOrSource(Text.of("player"))),
                         GiftCodePlugin.PLUGIN_ID+".command.use.other"
                 )),
                 GenericArguments.string(Text.of("code"))
