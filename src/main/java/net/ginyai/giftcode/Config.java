@@ -37,6 +37,8 @@ public class Config {
     private String jdbcUrl;
     private List<String> useCommandAlias;
 
+    private boolean removeOutdatedCode = false;
+    private boolean removeUsedUpCode = false;
     private Map<String,String> charSets;
     private Map<String,CodeFormat> codeFormatMap;
     private Map<String,CommandGroup> commandGroupMap;
@@ -54,6 +56,7 @@ public class Config {
     }
 
     public void reload() throws IOException, ObjectMappingException {
+        //todo:自动更新配置文件格式
         if(!configDir.toFile().exists()){
             configDir.toFile().mkdirs();
         }
@@ -62,9 +65,11 @@ public class Config {
         }
         mainConfigRootNode = mainConfigLoader.load();
         charSets = new HashMap<>();
+        removeOutdatedCode = mainConfigRootNode.getNode("remove_outdated_code").getBoolean(false);
+        removeUsedUpCode = mainConfigRootNode.getNode("remove_used_up_code").getBoolean(false);
+        useCommandAlias = mainConfigRootNode.getNode("use_command_alias").getList(TypeToken.of(String.class));
         databasePrefix = mainConfigRootNode.getNode("database","prefix").getString("");
         jdbcUrl =  mainConfigRootNode.getNode("database","jdbc_url").getString();
-        useCommandAlias = mainConfigRootNode.getNode("use_command_alias").getList(TypeToken.of(String.class));
         for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:mainConfigRootNode.getNode("random_char_set").getChildrenMap().entrySet()){
             charSets.put(node.getKey().toString(),node.getValue().getString());
         }
@@ -85,6 +90,14 @@ public class Config {
 
     public List<String> getUseCommandAlias() {
         return useCommandAlias;
+    }
+
+    public boolean isRemoveOutdatedCode() {
+        return removeOutdatedCode;
+    }
+
+    public boolean isRemoveUsedUpCode() {
+        return removeUsedUpCode;
     }
 
     public String getCharSet(String name){

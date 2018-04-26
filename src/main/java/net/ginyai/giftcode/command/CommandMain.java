@@ -32,7 +32,6 @@ public class CommandMain implements ICommand {
         addSubCommand(new CommandUse().getCommandSpec(),"use");
         addSubCommand(new CommandGenerate().getCommandSpec(),"generate");
         addSubCommand(new CommandExport().getCommandSpec(),"export");
-        //todo:
         commandSpec = CommandSpec.builder()
                 .children(childrenMap)
                 .arguments(getArgument())

@@ -9,4 +9,8 @@ dependencies {
     compile 'org.spongepowered:spongeapi:5.2.0-SNAPSHOT'
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 sponge.plugin.id = pluginId

@@ -3,8 +3,10 @@ package net.ginyai.giftcode.command;
 import net.ginyai.giftcode.GiftCodePlugin;
 import net.ginyai.giftcode.command.args.ArgCodeFormat;
 import net.ginyai.giftcode.command.args.ArgCommandGroup;
+import net.ginyai.giftcode.command.args.ArgLocalDateTime;
 import net.ginyai.giftcode.object.CodeFormat;
 import net.ginyai.giftcode.object.CommandGroup;
+import net.ginyai.giftcode.object.GiftCode;
 import net.ginyai.giftcode.storage.ICodeStorage;
 import net.ginyai.giftcode.util.Export;
 import org.spongepowered.api.command.CommandException;
@@ -17,8 +19,12 @@ import org.spongepowered.api.text.Text;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 public class CommandGenerate implements ICommand {
@@ -29,11 +35,15 @@ public class CommandGenerate implements ICommand {
 
     @Override
     public CommandElement getArgument() {
-        return GenericArguments.seq(
-                new ArgCodeFormat(Text.of("format")),
-                new ArgCommandGroup(Text.of("command_group")),
-                GenericArguments.integer(Text.of("amount"))
-        );
+        return GenericArguments.flags()
+                .valueFlag(GenericArguments.integer(Text.of("usage-count")),"u","-use")
+                .valueFlag(new ArgLocalDateTime(Text.of("start-time")),"s","-start")
+                .valueFlag(new ArgLocalDateTime(Text.of("end-time")),"e","-end")
+                .buildWith(GenericArguments.seq(
+                        new ArgCodeFormat(Text.of("format")),
+                        new ArgCommandGroup(Text.of("command_group")),
+                        GenericArguments.integer(Text.of("amount"))
+                ));
     }
 
     @Override
@@ -46,17 +56,23 @@ public class CommandGenerate implements ICommand {
         CodeFormat format = args.<CodeFormat>getOne("format").get();
         CommandGroup group = args.<CommandGroup>getOne("command_group").get();
         int amount = args.<Integer>getOne("amount").get();
+        Optional<Integer> use = args.getOne("usage-count");
+        Optional<LocalDateTime> start = args.getOne("start-time");
+        Optional<LocalDateTime> end = args.getOne("end-time");
         ICodeStorage storage = GiftCodePlugin.getInstance().getCodeStorage();
         GiftCodePlugin.getInstance().getLogger().info("Generating codes...");
-        List<String> added = new ArrayList<>();
-        for(int i = 0;i<amount;i++){
-            String code = format.genCode();
-            if(storage.addCode(code,group)){
-                added.add(code);
-            }
+        List<GiftCode> toAdd = new ArrayList<>();
+            for(int i = 0;i<amount;i++){
+            String codeString = format.genCode();
+            GiftCode code = new GiftCode(codeString,group);
+            use.ifPresent(code::setUseCount);
+            start.ifPresent(code::setStartTime);
+            end.ifPresent(code::setEndTime);
+            toAdd.add(code);
         }
+        Collection<GiftCode> added = storage.addCode(toAdd);
         try {
-            Path path = Export.export(added,group.getName()+"_generated");
+            Path path = Export.export(added.stream().map(GiftCode::getCodeString).collect(Collectors.toList()), group.getName()+"_generated");
             src.sendMessage(Text.of("Added "+added.size()+" codes.Saved to "+path.toString()));
             return CommandResult.success();
         } catch (IOException e) {
