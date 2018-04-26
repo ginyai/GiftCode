@@ -25,7 +25,7 @@ public class GiftCode {
 
     public GiftCode(String codeString,CommandGroup commandGroup,String context){
         this(codeString,commandGroup);
-        if(context!=null){
+        if(context!=null && !context.isEmpty()){
             for(String subString:context.split(",")){
                 String[] s = subString.split("=");
                 if(s.length!=2){
