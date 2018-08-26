@@ -43,6 +43,14 @@ public class Config {
     private Map<String,CodeFormat> codeFormatMap;
     private Map<String,CommandGroup> commandGroupMap;
 
+    private int playerQueryMin;
+    private int playerQueryMax;
+    private int playerQueryPunish;
+
+    private int globalQueryMin;
+    private int globalQueryMax;
+    private int globalQueryPunish;
+
     public Config(Path configDir) {
         this.plugin = GiftCodePlugin.getInstance();
         this.configDir = configDir;
@@ -86,6 +94,12 @@ public class Config {
         for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:commandGroupRootNode.getNode("command_groups").getChildrenMap().entrySet()){
             commandGroupMap.put(node.getKey().toString(),node.getValue().getValue(TypeToken.of(CommandGroup.class)));
         }
+        playerQueryMin = mainConfigRootNode.getNode("query","player","min").getInt(0);
+        playerQueryMax = Math.max(playerQueryMin,mainConfigRootNode.getNode("query","player","max").getInt(100000));
+        playerQueryPunish = mainConfigRootNode.getNode("query","player","punish").getInt(1000);
+        globalQueryMin = mainConfigRootNode.getNode("query","global","min").getInt(0);
+        globalQueryMax = Math.max(globalQueryMin,mainConfigRootNode.getNode("query","global","max").getInt(100000));
+        globalQueryPunish = mainConfigRootNode.getNode("query","global","punish").getInt(1000);
     }
 
     public List<String> getUseCommandAlias() {
@@ -112,6 +126,10 @@ public class Config {
         return codeFormatMap.keySet();
     }
 
+    public Map<String, CommandGroup> getCommandGroupMap() {
+        return commandGroupMap;
+    }
+
     public CommandGroup getCommandGroup(String name){
         return commandGroupMap.get(name);
     }
@@ -128,4 +146,27 @@ public class Config {
         return jdbcUrl;
     }
 
+    public int getPlayerQueryMin() {
+        return playerQueryMin;
+    }
+
+    public int getPlayerQueryMax() {
+        return playerQueryMax;
+    }
+
+    public int getPlayerQueryPunish() {
+        return playerQueryPunish;
+    }
+
+    public int getGlobalQueryMin() {
+        return globalQueryMin;
+    }
+
+    public int getGlobalQueryMax() {
+        return globalQueryMax;
+    }
+
+    public int getGlobalQueryPunish() {
+        return globalQueryPunish;
+    }
 }

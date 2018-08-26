@@ -1,5 +1,6 @@
 package net.ginyai.giftcode.storage;
 
+import net.ginyai.giftcode.Config;
 import net.ginyai.giftcode.GiftCodePlugin;
 import net.ginyai.giftcode.object.CommandGroup;
 import net.ginyai.giftcode.object.GiftCode;
@@ -32,6 +33,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
     private String LOOK_UP_LOG_BY_CODE_AND_PLAYER = "SELECT * FROM %s WHERE CODE=? AND PLAYER=?";
 
     private GiftCodePlugin plugin = GiftCodePlugin.getInstance();
+    private Map<String,CommandGroup> commandGroupMap = plugin.getConfig().getCommandGroupMap();
     private String codeTableName;
     private String logTableName;
     private SqlService sqlService;
@@ -44,7 +46,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         this.url = url;
         this.codeTableName = prefix+"codes";
         this.logTableName = prefix+"log";
-        this.sqlService = Sponge.getServiceManager().provide(SqlService.class).get();
+        this.sqlService = Sponge.getServiceManager().provideUnchecked(SqlService.class);
 
         CREATE_CODE_TABLE = String.format(CREATE_CODE_TABLE,codeTableName);
         GET_BY_CODE = String.format(GET_BY_CODE,codeTableName);
@@ -143,7 +145,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         if(command == null){
             return Optional.empty();
         }
-        CommandGroup group = plugin.getConfig().getCommandGroup(command);
+        CommandGroup group = commandGroupMap.get(command);
         if(group == null){
             return Optional.empty();
         }
@@ -276,7 +278,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
     }
 
     @Override
-    public boolean isUsed(String code,User user) {
+    public boolean isUsed(String code,UUID player) {
         boolean isUsed = false;
         int count = 0;
         boolean failed;
@@ -284,7 +286,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
             count++;
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(LOOK_UP_LOG_BY_CODE_AND_PLAYER)){
                 statement.setString(1,code);
-                statement.setString(2,user.getUniqueId().toString());
+                statement.setString(2,player.toString());
                 ResultSet resultSet = statement.executeQuery();
                 isUsed = resultSet.next();
                 failed = false;

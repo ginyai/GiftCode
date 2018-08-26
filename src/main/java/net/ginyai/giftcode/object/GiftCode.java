@@ -1,11 +1,13 @@
 package net.ginyai.giftcode.object;
 
 import net.ginyai.giftcode.GiftCodePlugin;
+import net.ginyai.giftcode.storage.ICodeStorage;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static net.ginyai.giftcode.util.Messages.*;
 
@@ -49,6 +51,8 @@ public class GiftCode {
     }
 
     public void process(Player player){
+        //todo:async storage
+        final ICodeStorage codeStorage = plugin.getCodeStorage();
         if(startTime!=null && LocalDateTime.now().isBefore(startTime)){
             player.sendMessage(getText("use.before-start"));
             return;
@@ -56,34 +60,34 @@ public class GiftCode {
         if(endTime!=null && LocalDateTime.now().isAfter(endTime)){
             player.sendMessage(getText("use.after-end"));
             if(plugin.getConfig().isRemoveOutdatedCode()){
-                plugin.getCodeStorage().removeCode(codeString);
+                plugin.getAsyncExecutor().execute(()->codeStorage.removeCode(codeString));
             }
             return;
         }
-        if(plugin.getLogStorage().isUsed(codeString,player)){
-            player.sendMessage(getText("use.used-by-player"));
-            return;
-        }
-        boolean succeed;
+        CompletableFuture<Boolean> future;
         if(useCount!=null){
             if(useCount<0){
-                succeed = true;
+                future = CompletableFuture.supplyAsync(()->true,plugin.getAsyncExecutor());
             }else if(useCount>=1){
                 useCount -= 1;
-                succeed = plugin.getCodeStorage().updateCode(this);
+                future = CompletableFuture.supplyAsync(()->codeStorage.updateCode(this),plugin.getAsyncExecutor());
             }else {
                 player.sendMessage(getText("use.used-up-count"));
                 if(plugin.getConfig().isRemoveUsedUpCode()){
-                    plugin.getCodeStorage().removeCode(codeString);
+                    CompletableFuture.supplyAsync(()->codeStorage.updateCode(this),plugin.getAsyncExecutor());
                 }
                 return;
             }
         }else {
-           succeed = plugin.getCodeStorage().removeCode(codeString);
+            future = CompletableFuture.supplyAsync(()->codeStorage.removeCode(codeString),plugin.getAsyncExecutor());
         }
+        future.thenAcceptAsync(b->give(b,player),plugin.getSyncExecutor());
+    }
+
+    public void give(boolean succeed,Player player){
         if(succeed){
             commandGroup.process(player);
-            plugin.getLogStorage().log(player, codeString, commandGroup);
+            plugin.log(player, codeString, commandGroup);
         }
     }
 

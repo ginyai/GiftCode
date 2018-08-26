@@ -3,6 +3,8 @@ package net.ginyai.giftcode;
 import com.google.inject.Inject;
 import net.ginyai.giftcode.command.CommandMain;
 import net.ginyai.giftcode.command.CommandUse;
+import net.ginyai.giftcode.object.CommandGroup;
+import net.ginyai.giftcode.query.QueryManager;
 import net.ginyai.giftcode.storage.ICodeStorage;
 import net.ginyai.giftcode.storage.ILogStorage;
 import net.ginyai.giftcode.storage.SqlStorage;
@@ -20,6 +22,7 @@ import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
@@ -55,6 +58,10 @@ public class GiftCodePlugin {
     private Path configDir;
 
     private Config config;
+    private QueryManager queryManager;
+
+    private SpongeExecutorService syncExecutor;
+    private SpongeExecutorService asyncExecutor;
 
     private ICodeStorage codeStorage;
     private ILogStorage logStorage;
@@ -67,8 +74,20 @@ public class GiftCodePlugin {
         return config;
     }
 
+    public QueryManager getQueryManager() {
+        return queryManager;
+    }
+
     public Path getConfigDir() {
         return configDir;
+    }
+
+    public SpongeExecutorService getAsyncExecutor() {
+        return asyncExecutor;
+    }
+
+    public SpongeExecutorService getSyncExecutor() {
+        return syncExecutor;
     }
 
     public ICodeStorage getCodeStorage() {
@@ -84,12 +103,16 @@ public class GiftCodePlugin {
         SqlStorage sqlStorage = new SqlStorage(config.getJdbcUrl(),config.getDatabasePrefix());
         this.codeStorage = sqlStorage;
         this.logStorage = sqlStorage;
+        this.queryManager.reload();
     }
 
     @Listener
     public void onGamePreInit(GamePreInitializationEvent event){
         instance = this;
+        this.syncExecutor = Sponge.getScheduler().createSyncExecutor(this);
+        this.asyncExecutor = Sponge.getScheduler().createAsyncExecutor(this);
         this.config = new Config(configDir);
+        this.queryManager = new QueryManager();
         try {
             reload();
         }catch (Exception e){
@@ -103,6 +126,12 @@ public class GiftCodePlugin {
         Sponge.getCommandManager().register(this,new CommandUse().getCommandSpec(),config.getUseCommandAlias());
     }
 
+    @Listener
+    public void onServerStarted(GameStartedServerEvent event){
+        Sponge.getScheduler().createTaskBuilder().name("Query Tick")
+                .execute(queryManager::tick).intervalTicks(1).submit(this);
+    }
+
 
     @Listener
     public void onGameReload(GameReloadEvent event) {
@@ -111,6 +140,10 @@ public class GiftCodePlugin {
         }catch (Exception e){
             logger.error("Failed to reload configs.",e);
         }
+    }
+
+    public void log(Player player, String code, CommandGroup group){
+        asyncExecutor.execute(()->logStorage.log(player,code,group));
     }
 
 }
