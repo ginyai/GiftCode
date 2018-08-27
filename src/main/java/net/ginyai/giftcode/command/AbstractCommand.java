@@ -1,6 +1,7 @@
 package net.ginyai.giftcode.command;
 
 import net.ginyai.giftcode.GiftCodePlugin;
+import net.ginyai.giftcode.Messages;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -67,9 +68,12 @@ public abstract class AbstractCommand implements ICommand, CommandExecutor {
 
     public Text getArgHelp(CommandSource source) {
         init();
-        Text.Builder builder = Text.builder();
-        builder.append(getMessage("giftcode.commands.args"));
         CommandElement element = help.element;
+        if(element.equals(GenericArguments.none())){
+            return Text.EMPTY;
+        }
+        Text.Builder builder = Text.builder();
+        builder.append(GiftCodePlugin.getMessage("giftcode.commands.args"));
         if(element instanceof CommandFlags){
             try {
                 Field field = CommandFlags.class.getDeclaredField("usageFlags");
@@ -97,7 +101,9 @@ public abstract class AbstractCommand implements ICommand, CommandExecutor {
                     objects.add("]");
                     objects.add(" ");
                     String id = availableFlags.get(0);
-                    builder.append(Text.NEW_LINE,Text.of(objects.toArray()),getMessage("flags."+id));
+                    builder.append(Text.NEW_LINE,
+                            Text.of("    "),Messages.adjustLength(Text.of(objects.toArray()),30)
+                            ,getMessage("flags."+id));
                 }
                 Field field1 = CommandFlags.class.getDeclaredField("childElement");
                 field1.setAccessible(true);
@@ -144,7 +150,9 @@ public abstract class AbstractCommand implements ICommand, CommandExecutor {
 //            e.printStackTrace();
             }
         }else {
-            builder.append(Text.NEW_LINE,commandElement.getUsage(source),Text.of(" "),getMessage("args."+id));
+            builder.append(Text.NEW_LINE,
+                    Text.of("    "),Messages.adjustLength(commandElement.getUsage(source),30),
+                    getMessage("args."+id));
         }
 
     }

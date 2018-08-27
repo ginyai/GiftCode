@@ -108,4 +108,13 @@ public class Messages {
             return TextSerializers.FORMATTING_CODE.deserializeUnchecked(input);
         }
     }
+
+    public static Text adjustLength(Text text,int length){
+        int spaces = length - text.toPlain().length();
+        if(spaces<=0){
+            return text;
+        }else {
+            return Text.of(text,String.format("%"+spaces+"s",""));
+        }
+    }
 }

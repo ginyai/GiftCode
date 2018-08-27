@@ -119,8 +119,8 @@ public class GiftCodePlugin {
     }
 
     public void reload() throws IOException, ObjectMappingException {
-        config.reload();
         messages.reload();
+        config.reload();
         SqlStorage sqlStorage = new SqlStorage(config.getJdbcUrl(),config.getDatabasePrefix());
         this.codeStorage = sqlStorage;
         this.logStorage = sqlStorage;
