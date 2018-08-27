@@ -16,6 +16,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -27,10 +28,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 
-public class CommandGenerate implements ICommand {
-    @Override
-    public String getPermission() {
-        return GiftCodePlugin.PLUGIN_ID+".command.generate";
+@NonnullByDefault
+public class CommandGenerate extends AbstractCommand {
+
+    public CommandGenerate() {
+        super("generate","gen");
     }
 
     @Override
@@ -47,11 +49,6 @@ public class CommandGenerate implements ICommand {
     }
 
     @Override
-    public Text getDescription() {
-        return Text.of("Generate codes");
-    }
-
-    @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         CodeFormat format = args.<CodeFormat>getOne("format").get();
         CommandGroup group = args.<CommandGroup>getOne("command_group").get();
@@ -59,8 +56,8 @@ public class CommandGenerate implements ICommand {
         Optional<Integer> use = args.getOne("usage-count");
         Optional<LocalDateTime> start = args.getOne("start-time");
         Optional<LocalDateTime> end = args.getOne("end-time");
-        ICodeStorage storage = GiftCodePlugin.getInstance().getCodeStorage();
-        GiftCodePlugin.getInstance().getLogger().info("Generating codes...");
+        ICodeStorage storage = GiftCodePlugin.getPlugin().getCodeStorage();
+        GiftCodePlugin.getPlugin().getLogger().info("Generating codes...");
         List<GiftCode> toAdd = new ArrayList<>();
             for(int i = 0;i<amount;i++){
             String codeString = format.genCode();
@@ -73,10 +70,11 @@ public class CommandGenerate implements ICommand {
         Collection<GiftCode> added = storage.addCode(toAdd);
         try {
             Path path = Export.export(added.stream().map(GiftCode::getCodeString).collect(Collectors.toList()), group.getName()+"_generated");
-            src.sendMessage(Text.of("Added "+added.size()+" codes.Saved to "+path.toString()));
+            src.sendMessage(getMessage("generated","amount",added.size(),"path",path.toString()));
             return CommandResult.success();
         } catch (IOException e) {
-            throw new CommandException(Text.of("Codes added but,failed to export."),e);
+            GiftCodePlugin.getPlugin().getLogger().error("Failed to save codes to file.",e);
+            throw new CommandException(getMessage("failed","amount",added.size()),e);
         }
     }
 }

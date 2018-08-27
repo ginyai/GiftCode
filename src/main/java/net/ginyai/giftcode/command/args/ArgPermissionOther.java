@@ -1,18 +1,18 @@
 package net.ginyai.giftcode.command.args;
 
-import org.spongepowered.api.Sponge;
+import net.ginyai.giftcode.GiftCodePlugin;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.*;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
-public class ArgPermissionOther extends CommandElement {
+@NonnullByDefault
+public class ArgPermissionOther extends CommandElement{
     private String permission;
     private CommandElement playerOrSource;
 
@@ -38,13 +38,13 @@ public class ArgPermissionOther extends CommandElement {
             return source;
         }else {
             //may not happen
-            throw args.createError(Text.of("Player only"));
+            throw args.createError(GiftCodePlugin.getPlugin().getMessages().getMessage("giftcoode.args.player-only"));
         }
     }
 
     @Override
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
-        if(src.hasPermission(permission)){
+        if(checkPermission(src)){
             return playerOrSource.complete(src,args,context);
         }
         return Collections.emptyList();
@@ -52,10 +52,14 @@ public class ArgPermissionOther extends CommandElement {
 
     @Override
     public Text getUsage(CommandSource src) {
-        if(src.hasPermission(permission)){
+        if(checkPermission(src)){
             return playerOrSource.getUsage(src);
         }else {
             return Text.EMPTY;
         }
+    }
+
+    public boolean checkPermission(CommandSource source) {
+        return source.hasPermission(permission);
     }
 }

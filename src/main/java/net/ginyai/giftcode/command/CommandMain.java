@@ -9,56 +9,41 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
-import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
-import java.util.Arrays;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CommandMain implements ICommand {
-    private Text description = Text.of("Gif code.");
-    private Text message = Text.builder(GiftCodePlugin.PLUGIN_NAME+" By GiNYAi")
-            .append(Text.NEW_LINE)
-            .append(Text.of("Usage:"+GiftCodePlugin.PLUGIN_ID+" help")).build();
-    private CommandSpec commandSpec;
-    private Map<List<String>,CommandCallable> childrenMap = new HashMap<>();
+@NonnullByDefault
+public class CommandMain extends AbstractCommand {
 
-    private GiftCodePlugin plugin = GiftCodePlugin.getInstance();
+    private Map<List<String>,CommandCallable> childrenMap = new HashMap<>();
+    private Map<String,ICommand> children = new HashMap<>();
+
+    private GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
 
     public CommandMain(){
-        addSubCommand(new CommandHelp(childrenMap).getCommandSpec(),"help");
-        addSubCommand(new CommandReload().getCommandSpec(),"reload");
-        addSubCommand(new CommandUse().getCommandSpec(),"use");
-        addSubCommand(new CommandGenerate().getCommandSpec(),"generate");
-        addSubCommand(new CommandExport().getCommandSpec(),"export");
+        super("giftcode","gf");
+        addSubCommand(new CommandHelp(childrenMap));
+        addSubCommand(new CommandReload());
+        addSubCommand(new CommandUse());
+        addSubCommand(new CommandGenerate());
+        addSubCommand(new CommandExport());
         commandSpec = CommandSpec.builder()
                 .children(childrenMap)
                 .arguments(getArgument())
                 .executor(this)
                 .description(getDescription())
-                .permission(getPermission()).build();
+                .permission(getPermission("base"))
+                .build();
     }
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        src.sendMessage(message);
+        src.sendMessage(getMessage("use-help", "help_command", "/" + plugin.getMainCommandAlias() + " help"));
         return CommandResult.success();
-    }
-
-    @Override
-    public CommandSpec getCommandSpec() {
-        return commandSpec;
-    }
-
-    @Override
-    public String getPermission() {
-        return GiftCodePlugin.PLUGIN_ID+".command.main";
-    }
-
-    @Override
-    public Text getDescription() {
-        return description;
     }
 
     @Override
@@ -66,7 +51,13 @@ public class CommandMain implements ICommand {
         return GenericArguments.none();
     }
 
-    private void addSubCommand(CommandCallable command,String... aliases){
-        childrenMap.put(Arrays.asList(aliases),command);
+    private void addSubCommand(ICommand command){
+        childrenMap.put(command.getNameList(), command.getCallable());
+        children.put(command.getName(),command);
+    }
+
+    @Nullable
+    public ICommand getChild(String name){
+        return children.get(name);
     }
 }

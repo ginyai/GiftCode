@@ -8,11 +8,13 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
-public class CommandReload implements ICommand {
-    @Override
-    public String getPermission() {
-        return GiftCodePlugin.PLUGIN_ID+".command.reload";
+@NonnullByDefault
+public class CommandReload extends AbstractCommand {
+
+    public CommandReload() {
+        super("reload");
     }
 
     @Override
@@ -21,18 +23,14 @@ public class CommandReload implements ICommand {
     }
 
     @Override
-    public Text getDescription() {
-        return Text.of("Reload the plugin's configs.");
-    }
-
-    @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         try {
-            GiftCodePlugin.getInstance().reload();
+            GiftCodePlugin.getPlugin().reload();
+            src.sendMessage(getMessage("reloaded"));
+            return CommandResult.success();
         } catch (Exception e) {
-            GiftCodePlugin.getInstance().getLogger().error("Failed to reload config.",e);
-            throw new CommandException(Text.of("Plugin failed to reload config."),e);
+            GiftCodePlugin.getPlugin().getLogger().error("Failed to reload config.",e);
+            throw new CommandException(getMessage("failed"),e);
         }
-        return CommandResult.success();
     }
 }

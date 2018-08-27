@@ -52,7 +52,7 @@ public class Config {
     private int globalQueryPunish;
 
     public Config(Path configDir) {
-        this.plugin = GiftCodePlugin.getInstance();
+        this.plugin = GiftCodePlugin.getPlugin();
         this.configDir = configDir;
         this.mainConfigPath = configDir.resolve("main.conf");
         this.commandGroupPath = configDir.resolve("command_groups.conf");

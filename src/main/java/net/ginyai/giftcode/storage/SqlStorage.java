@@ -1,12 +1,10 @@
 package net.ginyai.giftcode.storage;
 
-import net.ginyai.giftcode.Config;
 import net.ginyai.giftcode.GiftCodePlugin;
 import net.ginyai.giftcode.object.CommandGroup;
 import net.ginyai.giftcode.object.GiftCode;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.sql.SqlService;
 
 import java.sql.Connection;
@@ -32,7 +30,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
     private String LOOK_UP_LOG_BY_CODE = "SELECT * FROM %s WHERE CODE=?";
     private String LOOK_UP_LOG_BY_CODE_AND_PLAYER = "SELECT * FROM %s WHERE CODE=? AND PLAYER=?";
 
-    private GiftCodePlugin plugin = GiftCodePlugin.getInstance();
+    private GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
     private Map<String,CommandGroup> commandGroupMap = plugin.getConfig().getCommandGroupMap();
     private String codeTableName;
     private String logTableName;

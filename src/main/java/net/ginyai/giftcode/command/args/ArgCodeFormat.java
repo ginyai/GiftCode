@@ -8,14 +8,14 @@ import org.spongepowered.api.command.args.CommandArgs;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@NonnullByDefault
 public class ArgCodeFormat extends CommandElement {
-
-    private Text errorMessage = Text.of("Cannot find code format with the name ");
 
     public ArgCodeFormat(@Nullable Text key) {
         super(key);
@@ -24,9 +24,11 @@ public class ArgCodeFormat extends CommandElement {
     @Nullable
     @Override
     protected Object parseValue(CommandSource source, CommandArgs args) throws ArgumentParseException {
-        CodeFormat format = GiftCodePlugin.getInstance().getConfig().getCodeFormat(args.next());
+        GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
+        String formatName = args.next();
+        CodeFormat format = plugin.getConfig().getCodeFormat(formatName);
         if(format == null){
-            throw args.createError(errorMessage);
+            throw args.createError(plugin.getMessages().getMessage("giftcoode.args.no-format","name",formatName));
         }
         return format;
     }
@@ -34,6 +36,6 @@ public class ArgCodeFormat extends CommandElement {
     @Override
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
         String prefix =args.nextIfPresent().orElse("").toLowerCase();
-        return GiftCodePlugin.getInstance().getConfig().getCodeFormats().stream().filter(s->s.toLowerCase().startsWith(prefix)).collect(Collectors.toList());
+        return GiftCodePlugin.getPlugin().getConfig().getCodeFormats().stream().filter(s->s.toLowerCase().startsWith(prefix)).collect(Collectors.toList());
     }
 }

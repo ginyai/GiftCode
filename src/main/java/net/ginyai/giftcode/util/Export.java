@@ -15,7 +15,7 @@ public class Export {
 
     public static Path export(Collection<String> codes, String fileName) throws IOException {
         if(exportDir == null){
-            exportDir = GiftCodePlugin.getInstance().getConfigDir().resolve("exports");
+            exportDir = GiftCodePlugin.getPlugin().getConfigDir().resolve("exports");
         }
         if(!exportDir.toFile().exists()){
             exportDir.toFile().mkdirs();

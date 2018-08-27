@@ -11,6 +11,7 @@ import net.ginyai.giftcode.storage.SqlStorage;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.Player;
@@ -29,6 +30,7 @@ import org.spongepowered.api.text.format.TextStyles;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Plugin(
         id = GiftCodePlugin.PLUGIN_ID,
@@ -42,12 +44,19 @@ import java.nio.file.Path;
 public class GiftCodePlugin {
     public static final String PLUGIN_ID = "giftcode";
     public static final String PLUGIN_NAME = "GiftCode";
-    public static final String VERSION = "0.2.0";
+    public static final String VERSION = "@version@";
 
     private static GiftCodePlugin instance;
 
-    public static GiftCodePlugin getInstance() {
+    public GiftCodePlugin() {
+    }
+
+    public static GiftCodePlugin getPlugin() {
         return instance;
+    }
+
+    public static Text getMessage(String key){
+        return instance.getMessages().getMessage(key);
     }
 
     @Inject
@@ -58,6 +67,7 @@ public class GiftCodePlugin {
     private Path configDir;
 
     private Config config;
+    private Messages messages;
     private QueryManager queryManager;
 
     private SpongeExecutorService syncExecutor;
@@ -66,12 +76,18 @@ public class GiftCodePlugin {
     private ICodeStorage codeStorage;
     private ILogStorage logStorage;
 
+    private String mainCommandAlias;
+
     public Logger getLogger() {
         return logger;
     }
 
     public Config getConfig() {
         return config;
+    }
+
+    public Messages getMessages() {
+        return messages;
     }
 
     public QueryManager getQueryManager() {
@@ -98,8 +114,13 @@ public class GiftCodePlugin {
         return logStorage;
     }
 
+    public String getMainCommandAlias() {
+        return mainCommandAlias;
+    }
+
     public void reload() throws IOException, ObjectMappingException {
         config.reload();
+        messages.reload();
         SqlStorage sqlStorage = new SqlStorage(config.getJdbcUrl(),config.getDatabasePrefix());
         this.codeStorage = sqlStorage;
         this.logStorage = sqlStorage;
@@ -112,6 +133,7 @@ public class GiftCodePlugin {
         this.syncExecutor = Sponge.getScheduler().createSyncExecutor(this);
         this.asyncExecutor = Sponge.getScheduler().createAsyncExecutor(this);
         this.config = new Config(configDir);
+        this.messages = new Messages();
         this.queryManager = new QueryManager();
         try {
             reload();
@@ -122,8 +144,11 @@ public class GiftCodePlugin {
 
     @Listener
     public void onServerStart(GameStartingServerEvent event) {
-        Sponge.getCommandManager().register(this,new CommandMain().getCommandSpec(),GiftCodePlugin.PLUGIN_ID);
-        Sponge.getCommandManager().register(this,new CommandUse().getCommandSpec(),config.getUseCommandAlias());
+        CommandMain commandMain = new CommandMain();
+        Optional<CommandMapping> optionalCommandMapping =
+                Sponge.getCommandManager().register(this,commandMain.getCallable(),commandMain.getNameList());
+        optionalCommandMapping.ifPresent(commandMapping -> mainCommandAlias = commandMapping.getPrimaryAlias());
+        Sponge.getCommandManager().register(this,commandMain.getChild("use").getCallable(),config.getUseCommandAlias());
     }
 
     @Listener

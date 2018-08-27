@@ -3,16 +3,13 @@ package net.ginyai.giftcode.object;
 import net.ginyai.giftcode.GiftCodePlugin;
 import net.ginyai.giftcode.storage.ICodeStorage;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.text.Text;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static net.ginyai.giftcode.util.Messages.*;
-
 public class GiftCode {
-    private static GiftCodePlugin plugin = GiftCodePlugin.getInstance();
+    private static GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
 
     private final String codeString;
     private CommandGroup commandGroup;
@@ -51,14 +48,13 @@ public class GiftCode {
     }
 
     public void process(Player player){
-        //todo:async storage
         final ICodeStorage codeStorage = plugin.getCodeStorage();
         if(startTime!=null && LocalDateTime.now().isBefore(startTime)){
-            player.sendMessage(getText("use.before-start"));
+            player.sendMessage(plugin.getMessages().getMessage("giftcode.code.before-start"));
             return;
         }
         if(endTime!=null && LocalDateTime.now().isAfter(endTime)){
-            player.sendMessage(getText("use.after-end"));
+            player.sendMessage(plugin.getMessages().getMessage("giftcode.code.after-end"));
             if(plugin.getConfig().isRemoveOutdatedCode()){
                 plugin.getAsyncExecutor().execute(()->codeStorage.removeCode(codeString));
             }
@@ -72,7 +68,7 @@ public class GiftCode {
                 useCount -= 1;
                 future = CompletableFuture.supplyAsync(()->codeStorage.updateCode(this),plugin.getAsyncExecutor());
             }else {
-                player.sendMessage(getText("use.used-up-count"));
+                player.sendMessage(plugin.getMessages().getMessage("giftcode.code.used-up-count"));
                 if(plugin.getConfig().isRemoveUsedUpCode()){
                     CompletableFuture.supplyAsync(()->codeStorage.updateCode(this),plugin.getAsyncExecutor());
                 }

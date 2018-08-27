@@ -1,5 +1,6 @@
 package net.ginyai.giftcode.object;
 
+import com.google.common.collect.ImmutableList;
 import net.ginyai.giftcode.GiftCodePlugin;
 
 import java.util.List;
@@ -8,17 +9,35 @@ import java.util.regex.Pattern;
 
 public class CodeFormat {
 
-    private static final Pattern PATTERN = Pattern.compile("\\{(.*?):([0-9]+)}");
+    private static final Pattern PATTERN = Pattern.compile("(.*)\\{(.*?):([0-9]+)}");
 
     private String formatString;
-    private List<?> format;
+    private List<Object> format;
 
     public CodeFormat(String formatString){
         this.formatString = formatString;
-//        Matcher matcher = PATTERN.matcher(formatString);
-//        if(matcher.find()){
-//            matcher.
-//        }
+        ImmutableList.Builder<Object> builder = ImmutableList.builder();
+        Matcher matcher = PATTERN.matcher(formatString);
+        int i = 0;
+        while (matcher.find(i)){
+            String before = matcher.group(1);
+            String charSet = GiftCodePlugin.getPlugin().getConfig()
+                    .getCharSet(matcher.group(2));
+            int length = Integer.parseInt(matcher.group(3));
+            if(charSet==null){
+                builder.add(matcher.group());
+            }else {
+                if(!before.isEmpty()){
+                    builder.add(before);
+                }
+                builder.add(new RandomPart(charSet,length));
+            }
+            i = matcher.end(3);
+        }
+        if(i+1<formatString.length()){
+            builder.add(formatString.substring(i+1,formatString.length()));
+        }
+        format = builder.build();
     }
 
     public String getFormatString() {
@@ -26,25 +45,15 @@ public class CodeFormat {
     }
 
     public String genCode(){
-        String out = formatString;
-        Matcher matcher = PATTERN.matcher(out);
-        while (matcher.find()){
-            String charSet = GiftCodePlugin.getInstance().getConfig().getCharSet(matcher.group(1));
-            int length = Integer.parseInt(matcher.group(2));
-            String replacement = new RandomPart(charSet,length).gen();
-            out = matcher.replaceFirst(replacement);
-            matcher = PATTERN.matcher(out);
+        StringBuilder builder = new StringBuilder();
+        for(Object o:format){
+            if(o instanceof RandomPart){
+                builder.append(((RandomPart) o).gen());
+            }else {
+                builder.append(o.toString());
+            }
         }
-        return out;
-//        StringBuilder builder = new StringBuilder();
-//        for(Object o:format){
-//            if(o instanceof RandomPart){
-//                builder.append(((RandomPart) o).gen());
-//            }else {
-//                builder.append(o.toString());
-//            }
-//        }
-//        return builder.toString();
+        return builder.toString();
     }
 
     private static class RandomPart{

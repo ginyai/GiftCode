@@ -9,27 +9,20 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import java.util.List;
 import java.util.Map;
 
-public class CommandHelp implements ICommand {
+@NonnullByDefault
+public class CommandHelp extends AbstractCommand {
+    private static final GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
+    private Map<List<String>, CommandCallable> childrenMap;
 
-    private Text description = Text.of("Show helps of Commands.");
-    private Map<List<String>,CommandCallable> subCommandMap;
-
-    CommandHelp(Map<List<String>,CommandCallable> subCommandMap){
-        this.subCommandMap = subCommandMap;
-    }
-
-    @Override
-    public String getPermission() {
-        return GiftCodePlugin.PLUGIN_ID+".command.help";
-    }
-
-    @Override
-    public Text getDescription() {
-        return description;
+    public CommandHelp(Map<List<String>, CommandCallable> childrenMap) {
+        super("help");
+        this.childrenMap = childrenMap;
     }
 
     @Override
@@ -39,17 +32,19 @@ public class CommandHelp implements ICommand {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        Text.Builder textBuilder = Text.builder("Commands:");
-        for(Map.Entry<List<String>,CommandCallable> entry:subCommandMap.entrySet()){
-            if(entry.getValue().testPermission(src)){
-                textBuilder.append(Text.NEW_LINE);
-                textBuilder.append(Text.of(entry.getKey().toString()));
-                textBuilder.append(Text.NEW_LINE);
-                textBuilder.append(Text.of("        :"));
-                textBuilder.append(entry.getValue().getHelp(src).orElse(Text.EMPTY));
+        Text.Builder builder = Text.builder();
+        builder.append(getMessage("header"));
+        for (Map.Entry<List<String>, CommandCallable> entry : childrenMap.entrySet()) {
+            if (entry.getValue().testPermission(src)) {
+                builder.append(Text.NEW_LINE,
+                        Text.of(TextColors.GRAY, "/" + plugin.getMainCommandAlias() + " " + entry.getKey().get(0) + " "),
+                        entry.getValue().getUsage(src), Text.NEW_LINE,
+                        entry.getValue().getShortDescription(src).orElse(Text.of("no description"))
+                );
             }
         }
-        src.sendMessage(textBuilder.toText());
+        Text text = builder.build();
+        src.sendMessage(text);
         return CommandResult.success();
     }
 }

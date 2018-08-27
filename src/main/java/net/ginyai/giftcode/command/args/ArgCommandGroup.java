@@ -8,14 +8,14 @@ import org.spongepowered.api.command.args.CommandArgs;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@NonnullByDefault
 public class ArgCommandGroup extends CommandElement {
-
-    private Text errorMessage = Text.of("Cannot find command group with the name ");
 
     public ArgCommandGroup(@Nullable Text key) {
         super(key);
@@ -24,9 +24,11 @@ public class ArgCommandGroup extends CommandElement {
     @Nullable
     @Override
     protected Object parseValue(CommandSource source, CommandArgs args) throws ArgumentParseException {
-        CommandGroup command = GiftCodePlugin.getInstance().getConfig().getCommandGroup(args.next());
+        GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
+        String groupName = args.next();
+        CommandGroup command = plugin.getConfig().getCommandGroup(groupName);
         if(command == null){
-            throw args.createError(errorMessage);
+            throw args.createError(plugin.getMessages().getMessage("giftcoode.args.no-group","name",groupName));
         }
         return command;
     }
@@ -34,6 +36,6 @@ public class ArgCommandGroup extends CommandElement {
     @Override
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
         String prefix =args.nextIfPresent().orElse("").toLowerCase();
-        return GiftCodePlugin.getInstance().getConfig().getCommandGroups().stream().filter(s->s.toLowerCase().startsWith(prefix)).collect(Collectors.toList());
+        return GiftCodePlugin.getPlugin().getConfig().getCommandGroups().stream().filter(s->s.toLowerCase().startsWith(prefix)).collect(Collectors.toList());
     }
 }

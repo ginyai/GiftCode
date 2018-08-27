@@ -2,7 +2,6 @@ package net.ginyai.giftcode.query;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.TreeMultimap;
 import net.ginyai.giftcode.Config;
 import net.ginyai.giftcode.GiftCodePlugin;
@@ -11,15 +10,14 @@ import net.ginyai.giftcode.storage.ICodeStorage;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
+import org.spongepowered.api.text.Text;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static net.ginyai.giftcode.util.Messages.getText;
-
 public class QueryManager {
-    private GiftCodePlugin plugin = GiftCodePlugin.getInstance();
+    private GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
     private SpongeExecutorService sync = plugin.getSyncExecutor();
     private SpongeExecutorService async = plugin.getAsyncExecutor();
 
@@ -108,10 +106,10 @@ public class QueryManager {
                 interval = Math.min(config.getGlobalQueryMax(),interval+config.getGlobalQueryPunish());
                 long punish = playerPunish.get(uuid,uuid1 -> (long)playerQueryMin) + config.getPlayerQueryPunish();
                 playerPunish.put(uuid,Math.min(config.getPlayerQueryMax(),punish));
-                Sponge.getServer().getPlayer(uuid).ifPresent(player -> player.sendMessage(getText("use.wrong-code")));
+                Sponge.getServer().getPlayer(uuid).ifPresent(player -> player.sendMessage(GiftCodePlugin.getMessage("giftcode.code.wrong-code")));
                 break;
             case USED:
-                Sponge.getServer().getPlayer(uuid).ifPresent(player -> player.sendMessage(getText("use.used-by-player")));
+                Sponge.getServer().getPlayer(uuid).ifPresent(player -> player.sendMessage(GiftCodePlugin.getMessage("giftcode.code.used-by-player")));
                 break;
             case ERROR:
                 //暂时还没有做好

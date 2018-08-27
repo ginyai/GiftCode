@@ -1,22 +1,27 @@
 package net.ginyai.giftcode.command;
 
 
+import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 
-public interface ICommand extends CommandExecutor {
-    default CommandSpec getCommandSpec(){
-        return CommandSpec.builder()
-                .arguments(getArgument())
-                .permission(getPermission())
-                .description(getDescription())
-                .executor(this)
-                .build();
-    }
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-    String getPermission();
-    CommandElement getArgument();
-    Text getDescription();
+public interface ICommand {
+    CommandCallable getCallable();
+
+    String getName();
+
+    String[] getAlias();
+
+    default List<String> getNameList() {
+        List<String> list = new ArrayList<>();
+        list.add(getName());
+        list.addAll(Arrays.asList(getAlias()));
+        return list;
+    }
 }

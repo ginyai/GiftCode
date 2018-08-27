@@ -10,15 +10,17 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 
-public class CommandExport implements ICommand {
-    @Override
-    public String getPermission() {
-        return GiftCodePlugin.PLUGIN_ID+".command.export";
+@NonnullByDefault
+public class CommandExport extends AbstractCommand {
+
+    public CommandExport() {
+        super("export");
     }
 
     @Override
@@ -27,20 +29,16 @@ public class CommandExport implements ICommand {
     }
 
     @Override
-    public Text getDescription() {
-        return Text.of("Export available codes to a text file.");
-    }
-
-    @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         CommandGroup group = args.<CommandGroup>getOne("command_group").get();
-        Collection<String> codes = GiftCodePlugin.getInstance().getCodeStorage().getCodes(group);
+        Collection<String> codes = GiftCodePlugin.getPlugin().getCodeStorage().getCodes(group);
         try {
             Path path = Export.export(codes,group.getName()+"_exported");
-            src.sendMessage(Text.of(codes.size()+" codes saved to "+path.toString()));
+            src.sendMessage(getMessage("exported","amount",codes.size(),"path",path.toString()));
             return CommandResult.success();
         } catch (IOException e) {
-            throw new CommandException(Text.of("Failed to export."),e);
+            GiftCodePlugin.getPlugin().getLogger().error("Failed to export.",e);
+            throw new CommandException(getMessage("failed"),e);
         }
     }
 }

@@ -1,7 +1,8 @@
 package net.ginyai.giftcode.object;
 
 import com.google.common.reflect.TypeToken;
-import net.ginyai.giftcode.util.Messages;
+import net.ginyai.giftcode.GiftCodePlugin;
+import net.ginyai.giftcode.Messages;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
@@ -11,6 +12,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.util.List;
+import java.util.Optional;
 
 public class CommandGroup {
     private String name;
@@ -39,8 +41,8 @@ public class CommandGroup {
             CommandGroup group = new CommandGroup();
             group.name = node.getKey().toString();
             group.commands = node.getNode("commands").getList(TypeToken.of(String.class));
-            //todo:自定义默认消息
-            group.successMessage = Messages.parseText(node.getNode("succes_message").getString("&a成功使用兑换码"));
+            group.successMessage = Optional.ofNullable(node.getNode("succes_message").getString(null)).map(Messages::parseText)
+                    .orElse(GiftCodePlugin.getMessage("giftcode.code.default-success"));
             return group;
         }
 
