@@ -2,29 +2,34 @@ package net.ginyai.giftcode.config;
 
 import com.google.common.reflect.TypeToken;
 import net.ginyai.giftcode.GiftCodePlugin;
+import net.ginyai.giftcode.exception.DataException;
 import net.ginyai.giftcode.object.CodeFormat;
-import net.ginyai.giftcode.object.CommandGroup;
-import ninja.leaping.configurate.ConfigurationNode;
+import net.ginyai.giftcode.storage.ICodeStorage;
+import net.ginyai.giftcode.storage.ILogStorage;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
-import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.spongepowered.api.Sponge;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Config {
 
     public static final int CURRENT_VERSION = 4;
+    public static final ConfigurationOptions OPTIONS;
+
+    static {
+        ConfigurationOptions options = ConfigurationOptions.defaults();
+        TypeSerializerCollection serializers = options.getSerializers();
+        serializers.registerType(TypeToken.of(IStorageProvider.class),new StorageProviders.Serializer());
+        OPTIONS = options.setSerializers(serializers);
+    }
 
     private GiftCodePlugin plugin;
     private Path configDir;
@@ -32,8 +37,6 @@ public class Config {
     private Path mainConfigPath;
     private ConfigurationLoader<CommentedConfigurationNode> mainConfigLoader;
 
-    private String databasePrefix;
-    private String jdbcUrl;
     private List<String> useCommandAlias;
 
     private boolean removeOutdatedCode = false;
@@ -49,6 +52,10 @@ public class Config {
     private int globalQueryMax;
     private int globalQueryPunish;
 
+    private Map<String,IStorageProvider> providerMap;
+    private IStorageProvider codeProvider;
+    private IStorageProvider logProvider;
+
     public Config(Path configDir) {
         this.plugin = GiftCodePlugin.getPlugin();
         this.configDir = configDir;
@@ -56,6 +63,7 @@ public class Config {
         mainConfigLoader = HoconConfigurationLoader.builder().setPath(mainConfigPath).build();
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void reload() throws IOException, ObjectMappingException {
         Files.createDirectories(configDir);
         Sponge.getAssetManager().getAsset(plugin,"default_config.conf").get().copyToFile(mainConfigPath);
@@ -80,25 +88,27 @@ public class Config {
     }
 
     private void reload(CommentedConfigurationNode rootNode) throws ObjectMappingException {
+        removeOutdatedCode = rootNode.getNode("giftcode","remove","outdated").getBoolean(false);
+        removeUsedUpCode = rootNode.getNode("giftcode","remove","used-up").getBoolean(false);
+        useCommandAlias = rootNode.getNode("giftcode","command-alias","use").getList(TypeToken.of(String.class));
         charSets = new HashMap<>();
-        removeOutdatedCode = rootNode.getNode("remove_outdated_code").getBoolean(false);
-        removeUsedUpCode = rootNode.getNode("remove_used_up_code").getBoolean(false);
-        useCommandAlias = rootNode.getNode("use_command_alias").getList(TypeToken.of(String.class));
-        databasePrefix = rootNode.getNode("database","prefix").getString("");
-        jdbcUrl =  rootNode.getNode("database","jdbc_url").getString();
-        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:rootNode.getNode("random_char_set").getChildrenMap().entrySet()){
+        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:rootNode.getNode("giftcode","random-char-set").getChildrenMap().entrySet()){
             charSets.put(node.getKey().toString(),node.getValue().getString());
         }
         codeFormatMap = new HashMap<>();
-        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:rootNode.getNode("code_formats").getChildrenMap().entrySet()){
+        for(Map.Entry<Object, ? extends CommentedConfigurationNode> node:rootNode.getNode("giftcode","code-formats").getChildrenMap().entrySet()){
             codeFormatMap.put(node.getKey().toString(),new CodeFormat(node.getValue().getString()));
         }
-        playerQueryMin = rootNode.getNode("query","player","min").getInt(0);
-        playerQueryMax = Math.max(playerQueryMin,rootNode.getNode("query","player","max").getInt(100000));
-        playerQueryPunish = rootNode.getNode("query","player","punish").getInt(1000);
-        globalQueryMin = rootNode.getNode("query","global","min").getInt(0);
-        globalQueryMax = Math.max(globalQueryMin,rootNode.getNode("query","global","max").getInt(100000));
-        globalQueryPunish = rootNode.getNode("query","global","punish").getInt(1000);
+        playerQueryMin = rootNode.getNode("giftcode","query","player","min").getInt(0);
+        playerQueryMax = Math.max(playerQueryMin,rootNode.getNode("giftcode","query","player","max").getInt(100000));
+        playerQueryPunish = rootNode.getNode("giftcode","query","player","punish").getInt(1000);
+        globalQueryMin = rootNode.getNode("giftcode","query","global","min").getInt(0);
+        globalQueryMax = Math.max(globalQueryMin,rootNode.getNode("giftcode","query","global","max").getInt(100000));
+        globalQueryPunish = rootNode.getNode("giftcode","query","global","punish").getInt(1000);
+
+        providerMap = rootNode.getNode("giftcode","storage").getValue(new TypeToken<Map<String, IStorageProvider>>() {}, Collections.emptyMap());
+        codeProvider = Objects.requireNonNull(providerMap.get(rootNode.getNode("giftcode","storage-uasge","code").getString()));
+        logProvider = Objects.requireNonNull(providerMap.get(rootNode.getNode("giftcode","storage-uasge","log").getString()));
     }
 
     public List<String> getUseCommandAlias() {
@@ -125,12 +135,12 @@ public class Config {
         return codeFormatMap.keySet();
     }
 
-    public String getDatabasePrefix() {
-        return databasePrefix;
+    public ICodeStorage getCodeStorage() throws DataException {
+        return codeProvider.getCodeStorage();
     }
 
-    public String getJdbcUrl() {
-        return jdbcUrl;
+    public ILogStorage getLogStorage() throws DataException {
+        return logProvider.getLogStorage();
     }
 
     public int getPlayerQueryMin() {

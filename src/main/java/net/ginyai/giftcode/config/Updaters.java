@@ -35,7 +35,7 @@ public class Updaters {
 
         @Override
         public CommentedConfigurationNode update(CommentedConfigurationNode node) throws ObjectMappingException {
-            CommentedConfigurationNode out = SimpleCommentedConfigurationNode.root();
+            CommentedConfigurationNode out = SimpleCommentedConfigurationNode.root(Config.OPTIONS);
             out.getNode("version").setValue(4).setComment(getComment("version"));
             CommentedConfigurationNode giftcode = out.getNode("giftcode");
             giftcode.getNode("remove","outdated")

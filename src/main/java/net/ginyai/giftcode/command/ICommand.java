@@ -2,16 +2,15 @@ package net.ginyai.giftcode.command;
 
 
 import org.spongepowered.api.command.CommandCallable;
-import org.spongepowered.api.command.args.CommandElement;
-import org.spongepowered.api.command.spec.CommandExecutor;
-import org.spongepowered.api.command.spec.CommandSpec;
-import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@NonnullByDefault
 public interface ICommand {
+
     CommandCallable getCallable();
 
     String getName();

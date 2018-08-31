@@ -77,7 +77,8 @@ public class GiftCode {
         }else {
             future = CompletableFuture.supplyAsync(()->codeStorage.removeCode(codeString),plugin.getAsyncExecutor());
         }
-        future.thenAcceptAsync(b->give(b,player),plugin.getSyncExecutor());
+        future.thenAcceptAsync(b->give(b,player),plugin.getSyncExecutor())
+                .exceptionally(throwable -> {plugin.getLogger().error("Error",throwable);return null;});
     }
 
     public void give(boolean succeed,Player player){

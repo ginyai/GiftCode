@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 import net.ginyai.giftcode.command.CommandMain;
 import net.ginyai.giftcode.config.CommandGroupManager;
 import net.ginyai.giftcode.config.Config;
+import net.ginyai.giftcode.exception.DataException;
 import net.ginyai.giftcode.object.CommandGroup;
 import net.ginyai.giftcode.query.QueryManager;
 import net.ginyai.giftcode.storage.ICodeStorage;
 import net.ginyai.giftcode.storage.ILogStorage;
-import net.ginyai.giftcode.storage.SqlStorage;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
@@ -26,6 +26,7 @@ import org.spongepowered.api.text.Text;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 @Plugin(
@@ -122,9 +123,8 @@ public class GiftCodePlugin {
     public void reload() throws IOException, ObjectMappingException {
         messages.reload();
         config.reload();
-        SqlStorage sqlStorage = new SqlStorage(config.getJdbcUrl(),config.getDatabasePrefix());
-        this.codeStorage = sqlStorage;
-        this.logStorage = sqlStorage;
+        this.codeStorage = config.getCodeStorage();
+        this.logStorage = config.getLogStorage();
         this.queryManager.reload();
     }
 
@@ -150,7 +150,7 @@ public class GiftCodePlugin {
         Optional<CommandMapping> optionalCommandMapping =
                 Sponge.getCommandManager().register(this,commandMain.getCallable(),commandMain.getNameList());
         optionalCommandMapping.ifPresent(commandMapping -> mainCommandAlias = commandMapping.getPrimaryAlias());
-        Sponge.getCommandManager().register(this,commandMain.getChild("use").getCallable(),config.getUseCommandAlias());
+        Sponge.getCommandManager().register(this,Objects.requireNonNull(commandMain.getChild("use")).getCallable(),config.getUseCommandAlias());
     }
 
     @Listener
@@ -170,7 +170,13 @@ public class GiftCodePlugin {
     }
 
     public void log(Player player, String code, CommandGroup group){
-        asyncExecutor.execute(()->logStorage.log(player,code,group));
+        asyncExecutor.execute(()-> {
+            try {
+                logStorage.log(player,code,group);
+            } catch (DataException e) {
+                logger.error("Failed to log code usage.",e);
+            }
+        });
     }
 
 }
