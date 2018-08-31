@@ -31,7 +31,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
     private String LOOK_UP_LOG_BY_CODE_AND_PLAYER = "SELECT * FROM %s WHERE CODE=? AND PLAYER=?";
 
     private GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
-    private Map<String,CommandGroup> commandGroupMap = plugin.getConfig().getCommandGroupMap();
+//    private Map<String,CommandGroup> commandGroupMap = plugin.getConfig().getCommandGroupMap();
     private String codeTableName;
     private String logTableName;
     private SqlService sqlService;
@@ -143,7 +143,7 @@ public class SqlStorage implements ICodeStorage,ILogStorage {
         if(command == null){
             return Optional.empty();
         }
-        CommandGroup group = commandGroupMap.get(command);
+        CommandGroup group = plugin.getCommandGroupManager().getCommandGroup(command);
         if(group == null){
             return Optional.empty();
         }

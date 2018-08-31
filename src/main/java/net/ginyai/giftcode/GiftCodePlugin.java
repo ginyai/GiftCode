@@ -2,7 +2,8 @@ package net.ginyai.giftcode;
 
 import com.google.inject.Inject;
 import net.ginyai.giftcode.command.CommandMain;
-import net.ginyai.giftcode.command.CommandUse;
+import net.ginyai.giftcode.config.CommandGroupManager;
+import net.ginyai.giftcode.config.Config;
 import net.ginyai.giftcode.object.CommandGroup;
 import net.ginyai.giftcode.query.QueryManager;
 import net.ginyai.giftcode.storage.ICodeStorage;
@@ -12,21 +13,16 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandMapping;
-import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.format.TextStyles;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -67,6 +63,7 @@ public class GiftCodePlugin {
     private Path configDir;
 
     private Config config;
+    private CommandGroupManager commandGroupManager;
     private Messages messages;
     private QueryManager queryManager;
 
@@ -84,6 +81,10 @@ public class GiftCodePlugin {
 
     public Config getConfig() {
         return config;
+    }
+
+    public CommandGroupManager getCommandGroupManager() {
+        return commandGroupManager;
     }
 
     public Messages getMessages() {
@@ -133,6 +134,7 @@ public class GiftCodePlugin {
         this.syncExecutor = Sponge.getScheduler().createSyncExecutor(this);
         this.asyncExecutor = Sponge.getScheduler().createAsyncExecutor(this);
         this.config = new Config(configDir);
+        this.commandGroupManager = new CommandGroupManager(configDir);
         this.messages = new Messages();
         this.queryManager = new QueryManager();
         try {

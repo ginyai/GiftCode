@@ -28,6 +28,7 @@ public class Messages {
 
     public void reload() throws IOException {
         Path messagePath = GiftCodePlugin.getPlugin().getConfigDir().resolve("messages.conf");
+        // noinspection ConstantConditions
         Asset fallbackAsset = Sponge.getAssetManager().getAsset(plugin, "messages/" + Locale.getDefault().toString() + ".conf")
                 .orElse(Sponge.getAssetManager().getAsset(plugin, "messages/zh_CN.conf").get());
         fallbackAsset.copyToFile(messagePath,false);
@@ -115,6 +116,15 @@ public class Messages {
             return text;
         }else {
             return Text.of(text,String.format("%"+spaces+"s",""));
+        }
+    }
+
+    public static String adjustLength(String string,int length){
+        int spaces = length - string.length();
+        if(spaces<=0){
+            return string;
+        }else {
+            return string+String.format("%"+spaces+"s","");
         }
     }
 }

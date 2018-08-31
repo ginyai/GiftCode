@@ -31,6 +31,7 @@ public class CommandMain extends AbstractCommand {
         addSubCommand(new CommandUse());
         addSubCommand(new CommandGenerate());
         addSubCommand(new CommandExport());
+        addSubCommand(new CommandGroups());
         commandSpec = CommandSpec.builder()
                 .children(childrenMap)
                 .arguments(getArgument())

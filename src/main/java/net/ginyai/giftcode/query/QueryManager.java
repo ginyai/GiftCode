@@ -3,19 +3,19 @@ package net.ginyai.giftcode.query;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.TreeMultimap;
-import net.ginyai.giftcode.Config;
+import net.ginyai.giftcode.config.Config;
 import net.ginyai.giftcode.GiftCodePlugin;
 import net.ginyai.giftcode.object.GiftCode;
 import net.ginyai.giftcode.storage.ICodeStorage;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
-import org.spongepowered.api.text.Text;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("ConstantConditions")
 public class QueryManager {
     private GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
     private SpongeExecutorService sync = plugin.getSyncExecutor();
