@@ -32,12 +32,8 @@ public class ConfigFileStorage implements ICodeStorage,ILogStorage {
 
     private void save(){
         try {
-            if(!codeMap.isEmpty()) {
-                node.getNode("Codes").setValue(new TypeToken<Map<String, CodeEntry>>(){}, codeMap);
-            }
-            if(!logMap.isEmpty()) {
-                node.getNode("Log").setValue(new TypeToken<Map<String,Map<UUID,LogEntry>>>(){},logMap);
-            }
+            node.getNode("Codes").setValue(new TypeToken<Map<String, CodeEntry>>(){}, codeMap);
+            node.getNode("Log").setValue(new TypeToken<Map<String,Map<UUID,LogEntry>>>(){},logMap);
             loader.save(node);
         }catch (Exception e){
             throw new DataException(e);

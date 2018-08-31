@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class CodeFormat {
 
-    private static final Pattern PATTERN = Pattern.compile("(.*)\\{(.*?):([0-9]+)}");
+    private static final Pattern PATTERN = Pattern.compile("(.*?)\\{(.*?):([0-9]+)}");
 
     private String formatString;
     private List<Object> format;
@@ -32,10 +32,10 @@ public class CodeFormat {
                 }
                 builder.add(new RandomPart(charSet,length));
             }
-            i = matcher.end(3);
+            i = matcher.end(3)+1;
         }
-        if(i+1<formatString.length()){
-            builder.add(formatString.substring(i+1,formatString.length()));
+        if(i<formatString.length()){
+            builder.add(formatString.substring(i,formatString.length()));
         }
         format = builder.build();
     }

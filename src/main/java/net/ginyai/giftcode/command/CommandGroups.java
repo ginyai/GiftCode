@@ -130,12 +130,12 @@ public class CommandGroups extends AbstractCommand {
 
         @Override
         public String getRootPermission() {
-            return "giftcode.command.commandgroups" + name;
+            return "giftcode.command.commandgroups." + name;
         }
 
         @Override
         protected String getMessageKey(String s) {
-            return "giftcode.command.commandgroups" + name + "." + s;
+            return "giftcode.command.commandgroups." + name + "." + s;
         }
 
         @Override
@@ -169,12 +169,12 @@ public class CommandGroups extends AbstractCommand {
 
         @Override
         public String getRootPermission() {
-            return "giftcode.command.commandgroups" + name;
+            return "giftcode.command.commandgroups." + name;
         }
 
         @Override
         protected String getMessageKey(String s) {
-            return "giftcode.command.commandgroups" + name + "." + s;
+            return "giftcode.command.commandgroups." + name + "." + s;
         }
 
         @Override
@@ -213,12 +213,12 @@ public class CommandGroups extends AbstractCommand {
 
         @Override
         public String getRootPermission() {
-            return "giftcode.command.commandgroups" + name;
+            return "giftcode.command.commandgroups." + name;
         }
 
         @Override
         protected String getMessageKey(String s) {
-            return "giftcode.command.commandgroups" + name + "." + s;
+            return "giftcode.command.commandgroups." + name + "." + s;
         }
 
         @Override
@@ -257,12 +257,12 @@ public class CommandGroups extends AbstractCommand {
 
         @Override
         public String getRootPermission() {
-            return "giftcode.command.commandgroups" + name;
+            return "giftcode.command.commandgroups." + name;
         }
 
         @Override
         protected String getMessageKey(String s) {
-            return "giftcode.command.commandgroups" + name + "." + s;
+            return "giftcode.command.commandgroups." + name + "." + s;
         }
 
         @Override
@@ -288,7 +288,11 @@ public class CommandGroups extends AbstractCommand {
                                 .style(TextStyles.UNDERLINE)
                                 .onClick(TextActions.suggestCommand(String.format("/%s cg insert %s %d",GiftCodePlugin.getPlugin().getMainCommandAlias(),group.getName(),i+1)))
                                 .build());
-            }
+            }builder.append(Text.of("    "),
+                    Text.builder("Add")
+                            .onClick(TextActions.suggestCommand(String.format("/%s cg add %s ",GiftCodePlugin.getPlugin().getMainCommandAlias(),group.getName())))
+                            .style(TextStyles.UNDERLINE)
+                            .build());
             src.sendMessage(builder.build());
             return CommandResult.success();
         }
@@ -302,12 +306,12 @@ public class CommandGroups extends AbstractCommand {
 
         @Override
         public String getRootPermission() {
-            return "giftcode.command.commandgroups" + name;
+            return "giftcode.command.commandgroups." + name;
         }
 
         @Override
         protected String getMessageKey(String s) {
-            return "giftcode.command.commandgroups" + name + "." + s;
+            return "giftcode.command.commandgroups." + name + "." + s;
         }
 
         @Override

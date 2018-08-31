@@ -26,7 +26,7 @@ public class ArgCommandGroup extends CommandElement {
     protected Object parseValue(CommandSource source, CommandArgs args) throws ArgumentParseException {
         GiftCodePlugin plugin = GiftCodePlugin.getPlugin();
         String groupName = args.next();
-        CommandGroup command = plugin.getConfig().getCommandGroup(groupName);
+        CommandGroup command = plugin.getCommandGroupManager().getCommandGroup(groupName);
         if(command == null){
             throw args.createError(plugin.getMessages().getMessage("giftcoode.args.no-group","name",groupName));
         }
@@ -36,6 +36,6 @@ public class ArgCommandGroup extends CommandElement {
     @Override
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
         String prefix =args.nextIfPresent().orElse("").toLowerCase();
-        return GiftCodePlugin.getPlugin().getConfig().getCommandGroups().stream().filter(s->s.toLowerCase().startsWith(prefix)).collect(Collectors.toList());
+        return GiftCodePlugin.getPlugin().getCommandGroupManager().getCommandGroups().stream().filter(s->s.toLowerCase().startsWith(prefix)).collect(Collectors.toList());
     }
 }

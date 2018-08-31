@@ -123,7 +123,7 @@ public class QueryManager {
     public void reload(){
         this.interval = plugin.getConfig().getGlobalQueryMin();
         this.intervalMin = plugin.getConfig().getGlobalQueryMin();
-        this.playerPunish.cleanUp();
+        this.playerPunish.invalidateAll();
     }
 
 }

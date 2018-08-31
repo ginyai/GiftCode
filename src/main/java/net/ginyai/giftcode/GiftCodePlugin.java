@@ -123,6 +123,7 @@ public class GiftCodePlugin {
     public void reload() throws IOException, ObjectMappingException {
         messages.reload();
         config.reload();
+        commandGroupManager.reload();
         this.codeStorage = config.getCodeStorage();
         this.logStorage = config.getLogStorage();
         this.queryManager.reload();

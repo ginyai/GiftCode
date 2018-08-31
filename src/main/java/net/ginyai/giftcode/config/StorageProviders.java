@@ -16,6 +16,7 @@ import org.spongepowered.api.service.sql.SqlService;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -58,6 +59,7 @@ public class StorageProviders {
 
         private ConfigProvider(Path configPath, String type) throws IOException, ObjectMappingException {
             this.configPath = configPath;
+            Files.createDirectories(configPath.getParent());
             this.type = type;
             ConfigurationLoader<? extends ConfigurationNode> loader;
             switch (type){
