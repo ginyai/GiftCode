@@ -13,10 +13,7 @@ import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractCommand implements ICommand, CommandExecutor {
@@ -74,19 +71,28 @@ public abstract class AbstractCommand implements ICommand, CommandExecutor {
         }
         Text.Builder builder = Text.builder();
         builder.append(GiftCodePlugin.getMessage("giftcode.commands.args"));
-        if(element instanceof CommandFlags){
+        scanArg(element, source, builder);
+        return builder.toText();
+    }
+
+    private void scanArg(CommandElement commandElement,CommandSource source,Text.Builder builder){
+        //todo: PermissionCommandElement
+        if (commandElement == null){
+            return;
+        }
+        if (commandElement instanceof CommandFlags) {
             try {
                 Field field = CommandFlags.class.getDeclaredField("usageFlags");
                 field.setAccessible(true);
-                Map<List<String>, CommandElement> usageFlags = (Map<List<String>, CommandElement>) field.get(element);
-                for(Map.Entry<List<String>,CommandElement> entry:usageFlags.entrySet()){
-                    List<String> availableFlags = entry.getKey();
-                    CommandElement childElement = entry.getValue();
+                Map<?, ?> usageFlags = (Map<?, ?>) field.get(commandElement);
+                for (Map.Entry<?, ?> entry : usageFlags.entrySet()) {
+                    List<?> availableFlags = (List<?>) entry.getKey();
+                    CommandElement childElement = (CommandElement) entry.getValue();
                     List<Object> objects = new ArrayList<>();
                     objects.add("[");
-                    Iterator it = availableFlags.iterator();
-                    while(it.hasNext()) {
-                        String flag = (String)it.next();
+                    Iterator<?> it = availableFlags.iterator();
+                    while (it.hasNext()) {
+                        String flag = (String) it.next();
                         objects.add(flag.length() > 1 ? "--" : "-");
                         objects.add(flag);
                         if (it.hasNext()) {
@@ -100,26 +106,18 @@ public abstract class AbstractCommand implements ICommand, CommandExecutor {
                     }
                     objects.add("]");
                     objects.add(" ");
-                    String id = availableFlags.get(0);
+                    String id = availableFlags.get(0).toString();
                     builder.append(Text.NEW_LINE,
-                            Text.of("    "),Messages.adjustLength(Text.of(objects.toArray()),30)
-                            ,getMessage("flags."+id));
+                            Text.of("    "), Messages.adjustLength(Text.of(objects.toArray()), 30),
+                            getMessage("flags." + id));
                 }
                 Field field1 = CommandFlags.class.getDeclaredField("childElement");
                 field1.setAccessible(true);
-                element = (CommandElement) field1.get(element);
+                scanArg((CommandElement) field1.get(commandElement),source,builder);
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 GiftCodePlugin.getPlugin().getLogger().error("Failed to parse help for CommandFlags");
             }
         }
-        if(element!=null){
-            scanArg(element,source,builder);
-        }
-        return builder.toText();
-    }
-
-    private void scanArg(CommandElement commandElement,CommandSource source,Text.Builder builder){
-        //todo: PermissionCommandElement
         String id = commandElement.getUntranslatedKey();
         if(id == null){
             Class<? extends CommandElement> clazz = commandElement.getClass();
@@ -225,26 +223,21 @@ public abstract class AbstractCommand implements ICommand, CommandExecutor {
 
         @Override
         public void parse(CommandSource source, CommandArgs args, CommandContext context) throws ArgumentParseException {
+            //parse "help" first
             Object state = args.getState();
+            if(args.hasNext() && args.next().equalsIgnoreCase("help") && !args.hasNext()){
+                context.putArg("help",true);
+                return;
+            }
+            args.setState(state);
+            //normal args
             try {
                 element.parse(source, args, context);
                 if (args.hasNext()) {
-                    //avoid too many arguments
-                    context.putArg("help", true);
-                    while (args.hasNext()) {
-                        args.next();
-                    }
+                    throw args.createError(GiftCodePlugin.getPlugin().getMessages().getMessage("giftcode.commands.too-many-args"));
                 }
             } catch (ArgumentParseException e) {
-                context.putArg("help", true);
-//                args.setState(state);
-//                if (args.peek().equalsIgnoreCase("help")) {
-//                    context.putArg("help", true);
-//                } else {
-//                    //temp catch parse exception here
-//                    context.putArg("help", true);
-//                    //throw e;
-//                }
+                context.putArg("exception", e);
             }
         }
 
@@ -274,7 +267,12 @@ public abstract class AbstractCommand implements ICommand, CommandExecutor {
 
         @Override
         public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-            if (args.hasAny("help")) {
+            Optional<ArgumentParseException> optionalException = args.getOne("exception");
+            Text exceptionText = optionalException.map(ArgumentParseException::getText).orElse(null);
+            if (exceptionText!=null||args.hasAny("help")) {
+                if(exceptionText!=null){
+                    src.sendMessage(exceptionText);
+                }
                 src.sendMessage(getHelpMessage(src, args));
                 return CommandResult.success();
             } else {

@@ -31,7 +31,7 @@ public class Messages {
         // noinspection ConstantConditions
         Asset fallbackAsset = Sponge.getAssetManager().getAsset(plugin, "messages/" + Locale.getDefault().toString() + ".conf")
                 .orElse(Sponge.getAssetManager().getAsset(plugin, "messages/zh_CN.conf").get());
-        fallbackAsset.copyToFile(messagePath,false);
+//        fallbackAsset.copyToFile(messagePath,false);
         node = HoconConfigurationLoader.builder().setPath(messagePath).build().load();
         fallback = HoconConfigurationLoader.builder().setURL(fallbackAsset.getUrl()).build().load();
         cache.clear();
