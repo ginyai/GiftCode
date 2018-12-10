@@ -5,7 +5,6 @@ import net.ginyai.giftcode.exception.DataException;
 import net.ginyai.giftcode.object.CommandGroup;
 import net.ginyai.giftcode.object.GiftCode;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class SqlCodeStorage implements ICodeStorage {
-    private final DataSource dataSource;
+    private final IConnectionProvider connectionProvider;
     private final String tableName;
 
     private String GET_BY_CODE = "SELECT * FROM %s WHERE CODE=?";
@@ -27,8 +26,8 @@ public class SqlCodeStorage implements ICodeStorage {
     private String CREATE_CODE_TABLE = "CREATE TABLE IF NOT EXISTS %s (CODE VARCHAR(255) NOT NULL,COMMAND VARCHAR(255) NOT NULL,CONTEXT VARCHAR(255),PRIMARY KEY(CODE))";
 
 
-    public SqlCodeStorage(DataSource dataSource, String tableName) throws SQLException {
-        this.dataSource = dataSource;
+    public SqlCodeStorage(IConnectionProvider connectionProvider, String tableName) {
+        this.connectionProvider = connectionProvider;
         this.tableName = tableName;
         CREATE_CODE_TABLE = String.format(CREATE_CODE_TABLE,tableName);
         GET_BY_CODE = String.format(GET_BY_CODE,tableName);
@@ -36,7 +35,6 @@ public class SqlCodeStorage implements ICodeStorage {
         INSERT_CODE = String.format(INSERT_CODE,tableName);
         UPDATE_CODE = String.format(UPDATE_CODE,tableName);
         DELETE_CODE = String.format(DELETE_CODE,tableName);
-        createTable();
     }
 
     public String getTableName() {
@@ -44,13 +42,22 @@ public class SqlCodeStorage implements ICodeStorage {
     }
 
     private Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+        return connectionProvider.getConnection();
     }
 
     private void createTable() throws SQLException {
         try (Connection connection = getConnection()){
             PreparedStatement statement = connection.prepareStatement(CREATE_CODE_TABLE);
             statement.execute();
+        }
+    }
+
+    @Override
+    public void init() throws DataException {
+        try {
+            createTable();
+        } catch (SQLException e) {
+            throw new DataException(e);
         }
     }
 

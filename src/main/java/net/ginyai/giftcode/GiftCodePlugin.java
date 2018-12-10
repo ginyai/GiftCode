@@ -126,6 +126,8 @@ public class GiftCodePlugin {
         commandGroupManager.reload();
         this.codeStorage = config.getCodeStorage();
         this.logStorage = config.getLogStorage();
+        codeStorage.init();
+        logStorage.init();
         this.queryManager.reload();
     }
 

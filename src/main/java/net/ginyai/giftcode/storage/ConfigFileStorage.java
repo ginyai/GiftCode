@@ -22,12 +22,11 @@ public class ConfigFileStorage implements ICodeStorage,ILogStorage {
 
     private ConfigurationLoader<? extends ConfigurationNode> loader;
     private ConfigurationNode node;
+    private Runnable initializer;
 
-    public ConfigFileStorage(ConfigurationLoader<? extends ConfigurationNode> loader) throws IOException, ObjectMappingException {
+    public ConfigFileStorage(ConfigurationLoader<? extends ConfigurationNode> loader,Runnable initializer) {
         this.loader = loader;
-        this.node = loader.load();
-        codeMap = node.getNode("Codes").getValue(new TypeToken<Map<String, CodeEntry>>(){},new HashMap<>());
-        logMap = node.getNode("Log").getValue(new TypeToken<Map<String,Map<UUID,LogEntry>>>(){},new TreeMap<>());
+        this.initializer = initializer;
     }
 
     private void save(){
@@ -36,6 +35,18 @@ public class ConfigFileStorage implements ICodeStorage,ILogStorage {
             node.getNode("Log").setValue(new TypeToken<Map<String,Map<UUID,LogEntry>>>(){},logMap);
             loader.save(node);
         }catch (Exception e){
+            throw new DataException(e);
+        }
+    }
+
+    @Override
+    public void init() throws DataException {
+        try {
+            initializer.run();
+            this.node = loader.load();
+            codeMap = node.getNode("Codes").getValue(new TypeToken<Map<String, CodeEntry>>(){},new HashMap<>());
+            logMap = node.getNode("Log").getValue(new TypeToken<Map<String,Map<UUID,LogEntry>>>(){},new TreeMap<>());
+        } catch (Exception e) {
             throw new DataException(e);
         }
     }

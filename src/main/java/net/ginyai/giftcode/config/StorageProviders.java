@@ -31,13 +31,13 @@ public class StorageProviders {
         private SqlCodeStorage codeStorage;
         private SqlLogStorage logStorage;
 
-        private SqlProvider(String prefix, String jdbcUrl) throws SQLException {
+        private SqlProvider(String prefix, String jdbcUrl) {
             this.prefix = prefix;
             this.jdbcUrl = jdbcUrl;
-            DataSource dataSource = Sponge.getServiceManager().provideUnchecked(SqlService.class)
-                    .getDataSource(GiftCodePlugin.getPlugin(),jdbcUrl);
-            codeStorage = new SqlCodeStorage(dataSource,prefix+"codes");
-            logStorage = new SqlLogStorage(dataSource,prefix+"log");
+            IConnectionProvider connectionProvider = ()-> Sponge.getServiceManager().provideUnchecked(SqlService.class)
+                    .getDataSource(GiftCodePlugin.getPlugin(),jdbcUrl).getConnection();
+            codeStorage = new SqlCodeStorage(connectionProvider,prefix+"codes");
+            logStorage = new SqlLogStorage(connectionProvider,prefix+"log");
         }
 
         @Override
@@ -57,9 +57,8 @@ public class StorageProviders {
         private String type;
         private ConfigFileStorage storage;
 
-        private ConfigProvider(Path configPath, String type) throws IOException, ObjectMappingException {
+        private ConfigProvider(Path configPath, String type) {
             this.configPath = configPath;
-            Files.createDirectories(configPath.getParent());
             this.type = type;
             ConfigurationLoader<? extends ConfigurationNode> loader;
             switch (type){
@@ -75,7 +74,13 @@ public class StorageProviders {
                 default:
                     throw new UnsupportedOperationException(type);
             }
-            this.storage = new ConfigFileStorage(loader);
+            this.storage = new ConfigFileStorage(loader,()-> {
+                try {
+                    Files.createDirectories(configPath.getParent());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         @Override
@@ -93,25 +98,21 @@ public class StorageProviders {
         @Override
         public IStorageProvider deserialize(TypeToken<?> typeToken, ConfigurationNode node) throws ObjectMappingException {
             String type = Objects.requireNonNull(node.getNode("type").getString());
-            try {
-                switch (type){
-                    case "sql":
-                        return new SqlProvider(
-                                node.getNode("prefix").getString(),
-                                node.getNode("jdbc_url").getString()
-                        );
-                    case "yaml":
-                    case "hocon":
-                    case "json":
-                        return new ConfigProvider(
-                                Paths.get(node.getNode("file").getString()),
-                                type
-                        );
-                    default:
-                        throw new ObjectMappingException("Unsupported type "+type);
-                }
-            }catch (SQLException|IOException e) {
-                throw new ObjectMappingException(e);
+            switch (type){
+                case "sql":
+                    return new SqlProvider(
+                            node.getNode("prefix").getString(),
+                            node.getNode("jdbc_url").getString()
+                    );
+                case "yaml":
+                case "hocon":
+                case "json":
+                    return new ConfigProvider(
+                            Paths.get(node.getNode("file").getString()),
+                            type
+                    );
+                default:
+                    throw new ObjectMappingException("Unsupported type "+type);
             }
         }
 

@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface ICodeStorage {
+    void init() throws DataException;
+
     boolean hasCode(String code) throws DataException;
 
     Optional<GiftCode> getCode(String code) throws DataException;
