@@ -142,13 +142,13 @@ public class SqlCodeStorage implements ICodeStorage {
         }
         try (Connection connection = getConnection()){
             PreparedStatement statement = connection.prepareStatement(INSERT_CODE);
-            for(GiftCode code:codes){
-                statement.setString(1,code.getCommandGroup().getName());
-                statement.setString(2,code.getContextString());
-                statement.setString(3,code.getCodeString());
+            for(GiftCode code:codeList){
+                statement.setString(1,code.getCodeString());
+                statement.setString(2,code.getCommandGroup().getName());
+                statement.setString(3,code.getContextString());
                 statement.addBatch();
             }
-            statement.execute();
+            statement.executeBatch();
         }catch (SQLException e) {
             throw new DataException(e);
         }

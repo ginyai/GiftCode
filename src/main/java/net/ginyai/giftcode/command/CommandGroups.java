@@ -91,12 +91,12 @@ public class CommandGroups extends AbstractCommand {
 
         @Override
         public String getRootPermission() {
-            return "giftcode.command.commandgroups" + name;
+            return "giftcode.command.commandgroups." + name;
         }
 
         @Override
         protected String getMessageKey(String s) {
-            return "giftcode.command.commandgroups" + name + "." + s;
+            return "giftcode.command.commandgroups." + name + "." + s;
         }
 
         @Override
